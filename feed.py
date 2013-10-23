@@ -1,4 +1,5 @@
 import feedparser as fp
+import urllib2
 
 class Feed(object):
     ETAG_TYPE = 0  # only support etag head
@@ -13,55 +14,80 @@ class Feed(object):
         self.type_ = self.NONE_TYPE
 
 
-def Core(object):
+class Core(object):
 
     def __init__(self):
-        pass
+        self.feedlist = []
 
     def add_feed(self, link):
         """ add the new feed to feeds list"""
         feed = Feed(link)
+        self.__check_feed(feed)
+        self.feedlist.append(feed)
 
     def load_feeds(self):
         pass
 
+    def save_feeds(self):
+        pass
+
     def __check_feed(self, feed):
         res = fp.parse(feed.link)
-        if __hasattr(res,"status"):
+        if hasattr(res,"status"):
             if res.status != 200: # 200 for success
                 return False
             else:
                 #---------------- check the feed's type( feed's server support which header) --------------
-                if __hasattr(res, "etag"):
+                if hasattr(res, "etag"):
                     feed.etag = res.etag
-                if __hasattr(res, "modified"):
+                if hasattr(res, "modified"):
                     feed.modified = res.modified
 
                 # support both? check again (need to confirm the request header does work!)
                 if feed.etag and feed.modified:
                     res_ag = fp.parse(feed.link, etag=feed.etag, modified=feed.modified)
-                    if __hasattr(res_ag, "status"):
-                        if res.status == 304:  # it should be 304, if the header was accepted by server
+                    if hasattr(res_ag, "status"):
+                        if res_ag.status == 304:  # it should be 304, if the header was accepted by server
                             feed.type_ = Feed.BOTH_TYPE
                 elif feed.etag:
                     res_ag = fp.parse(feed.link, etag=feed.etag)
-                    if __hasattr(res_ag, "status"):
-                        if res.status == 304:
+                    if hasattr(res_ag, "status"):
+                        if res_ag.status == 304:
                             feed.type_ = Feed.ETAG_TYPE
                 elif feed.modified:
                     res_ag = fp.parse(feed.link, modified=feed.modified)
-                    if __hasattr(res_ag, "status"):
-                        if res.status == 304:
+                    if hasattr(res_ag, "status"):
+                        if res_ag.status == 304:
                             feed.type_ = Feed.MODI_TYPE
             #------------------- initial the feed info -------------------------
-            pass
+            feed.title = res.feed.title
+            feed.entries = res.entries
+            # try to get the feed's icon
+            if hasattr(res, "feed"):
+                f = res.feed
+                if hasattr(f, "link"):
+                    link = f.link
+                    icon_link = "http://www.google.comn/s2/favicons?domain=%s"%(link)
+                    try:
+                        feed.icon = urllib2.urlopen(icon_link).read()
+                        if feed.icon.find("html") != -1:
+                            feed.icon = None
+                    except BaseException:
+                        feed.icon = None
+            else:
+                feed.icon = None
         else:
             return False
 
-    def __hasattr(obj, attr):
-        try:
-            hasattr(obj, attr)
-            return True
-        except AttributeError:
-            return False
+
+
+if __name__ == "__main__":
+    core = Core()
+    #core.add_feed("http://coolshell.cn/feed")
+    #core.add_feed("http://www.ruanyifeng.com/blog/atom.xml")
+    core.add_feed("http://www.yinwang.org/atom.xml")
+    print core.feedlist[-1].type_
+    print core.feedlist[-1].icon
+    print core.feedlist[-1].title
+
 
