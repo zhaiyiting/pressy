@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>请按要求点击链接</title>
+<style type="text/css">
+    span{font-size:22px;}
+    a:link{text-decoration:none ; color:red ;}
+    a:visited {text-decoration:none ; color:#666 ;}
+    a:hover {text-decoration:underline ; color:#666 ;}
+    a:active {text-decoration:none ; color:#666 ;}
+</style>
+<script type="text/javascript">
+    //按钮 点击后 变灰并不可点击
+    function showbaidu(obj){
+        location.href = "http://www.baidu.com";
+        obj.setAttribute('disabled',true)
+    }
+    //超链接 点击后 不可点击
+    function showbaidu1(obj){
+      obj.removeAttribute("href");
+      obj.onclick=null;
+     obj.style.textDecoration= 'none ';//点击后  去掉下划线
+      window.open("http://www.google.com","_blank");
+    }
+</script>
+</head>
+<body>
+<a>点击后链接会消失</a>
+<br />
+<br />
+<br />
+<br />
+<span>testtesttest</span>
+<br />
+<br />
+<input type="button" class="baidu" onclick="showbaidu(this);" value="百&nbsp;&nbsp;度" target="_blank" />
+<a type="button" class="baidu1" onclick="showbaidu1(this);" target="_blank">google</a>
+</body>
+</html>
+
