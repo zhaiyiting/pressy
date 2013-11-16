@@ -102,6 +102,7 @@ class MainWin(qt.QMainWindow):
 
     def make_connection(self):
         self.connect(self, qt.SIGNAL("add_feed"), self.feed_tree.treemodel.add_feed)
+        self.connect(self.web_view, qt.SIGNAL("update_unread_num"), self.feed_tree.slotUpdateUnread)
 
 
     def slot_add_feed(self):
@@ -128,6 +129,7 @@ class MainWin(qt.QMainWindow):
         self.web_view.progress = 100
         self.progress_bar.setValue(self.web_view.progress)
         self.progress_bar.hide()
+        self.web_view.emit(qt.SIGNAL("update_unread_num"))
 
     def adjustTitle(self):
         self.setWindowTitle("Pressy - " + self.web_view.title())
