@@ -21,7 +21,6 @@ def feed_page(id_):
 
 @get('/entries/<id_>/<index>')
 def entrie_page(id_, index):
-    print "server"
     feed = get_feed(id_)
     entrie = feed.entries[int(index)]
     entrie.has_read = True

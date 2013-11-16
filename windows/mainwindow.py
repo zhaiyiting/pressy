@@ -129,10 +129,10 @@ class MainWin(qt.QMainWindow):
         self.web_view.progress = 100
         self.progress_bar.setValue(self.web_view.progress)
         self.progress_bar.hide()
-        self.web_view.emit(qt.SIGNAL("update_unread_num"))
 
     def adjustTitle(self):
         self.setWindowTitle("Pressy - " + self.web_view.title())
+        self.web_view.emit(qt.SIGNAL("update_unread_num"))
 
     def run_ser(self):
         """ run the bottle server"""

@@ -31,6 +31,7 @@ class FeedTree(qt.QWidget):
         self.treeview = qt.QTreeView(self)
         self.treeview.setModel(self.treemodel)
         self.treeview.setHeaderHidden(True)
+        self.treeview.expandAll()
         self.treemodel.add_feeds(self.document.feedlist)
 
         layout.addLayout(btn_layout)
