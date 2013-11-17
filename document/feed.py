@@ -22,6 +22,7 @@ class Feed(object):
         self.type_ = self.NONE_TYPE
         self.entries = []
         self.id_ = ""
+        self.folder = u"Feeds"
 
     def __eq__(self, other):
         if self.id_ == other.id_:
@@ -29,17 +30,20 @@ class Feed(object):
         else:
             return False
 
+
 class Entrie(object):
     def __init__(self, title, link, has_read=False):
         self.title = title
         self.link = link
         self.has_read = has_read
 
+
 class Document(object):
 
     def __init__(self):
         self.feedlist = []
-        self.icon_path = osp.join(st.common['app_path'],'windows','icons') 
+        self.icon_path = osp.join(st.common['app_path'],'windows','icons')
+        self.folder_list = []
         self.load_feeds()
 
     def add_feed(self, link):
@@ -56,8 +60,12 @@ class Document(object):
             with open(feeds_path, 'rb') as f:
                 try:
                     self.feedlist = pickle.load(f)
+                    if not self.feedlist:
+                        self.folder_list.append(u"Feeds")
+                    return
                 except EOFError:
                     pass
+        self.folder_list.append(u"Feeds")
 
     def save_feeds(self):
         """ save all feeds """
@@ -161,6 +169,7 @@ class Document(object):
         while 1:
             if self.queue.empty():
                 break
+            print "up quick"
             feed = self.queue.get()
             if feed.type_ == Feed.BOTH_TYPE:
                 re = fp.parse(feed.link, etag=feed.etag, modified=feed.modified)
@@ -177,6 +186,7 @@ class Document(object):
         while 1:
             if self.slow_queue.empty():
                 break
+            print "up slow"
             feed = self.slow_queue.get()
             re = fp.parse(feed.link)
             if hasattr(re, "status"):

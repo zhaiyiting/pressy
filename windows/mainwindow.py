@@ -101,7 +101,7 @@ class MainWin(qt.QMainWindow):
         self.web_view.loadFinished.connect(self.finishLoading)
 
     def make_connection(self):
-        self.connect(self, qt.SIGNAL("add_feed"), self.feed_tree.treemodel.add_feed)
+        self.connect(self, qt.SIGNAL("add_feed"), self.feed_tree.slot_add_feed)
         self.connect(self.web_view, qt.SIGNAL("update_unread_num"), self.feed_tree.slotUpdateUnread)
 
 
