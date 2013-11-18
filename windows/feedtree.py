@@ -26,6 +26,13 @@ class FeedTree(qt.QWidget):
         self.new_folder_btn.setIconSize(qt.QSize(18,18))
         btn_layout.addWidget(self.new_folder_btn)
 
+        # delete folder tool button
+        self.delete_btn = ut.create_toolbutton(self, icon = "delete",
+                                                   tip = "delete one feed or folder",
+                                                   triggered = self.slot_del_feed_folder)
+        self.delete_btn.setIconSize(qt.QSize(18,18))
+        btn_layout.addWidget(self.delete_btn)
+
 
         self.pin_btn = ut.create_toolbutton(self, icon = "pin",
                                        toggled = self.slot_auto_hide)
@@ -41,7 +48,7 @@ class FeedTree(qt.QWidget):
         self.treeview.setModel(self.treemodel)
         self.treeview.setHeaderHidden(True)
         self.treeview.expandAll()
-        self.treemodel.add_feeds(self.document.feedlist)
+        self.treemodel.add_feeds(self.document.feedlist, self.document.folder_list)
 
         layout.addLayout(btn_layout)
         layout.addWidget(self.treeview)
@@ -54,28 +61,49 @@ class FeedTree(qt.QWidget):
         self.connect(self.treeview, qt.SIGNAL("clicked(const QModelIndex &)"),
                      self.slotTreeItemClicked)
 
+    def slot_del_feed_folder(self):
+        if self.current_index:
+            item = self.current_index.internalPointer()
+            item_data = item.itemData
+            if isinstance(item_data, unicode):
+                folder_name = item_data
+                for child in item.childItems:
+                    feed = child.itemData
+                    self.document.feedlist.remove(feed)
+                folder_index = self.document.folder_list.index(folder_name)
+                self.treemodel.delete_folder(folder_name, folder_index)
+                self.document.folder_list.remove(folder_name)
+            else:
+                feed = self.current_index.internalPointer().itemData
+                self.treemodel.delete_feed(self.current_index)
+                self.document.feedlist.remove(feed)
 
     def slotTreeItemClicked(self, index):
         """ generate the link """
         item = index.internalPointer()
         self.current_index = index
         item_data = item.itemData
-        if item_data.id_:
-            link = "http://localhost:8080/feed/%s"%item_data.id_
-            webview = self.parentwin.web_view
-            webview.setUrl(qt.QUrl(link))
+        if not isinstance(item_data, unicode):
+            if item_data.id_:
+                link = "http://localhost:8080/feed/%s"%item_data.id_
+                webview = self.parentwin.web_view
+                webview.setUrl(qt.QUrl(link))
 
     def slotUpdateUnread(self):
         if self.current_index:
             self.treemodel.emit(qt.SIGNAL("dataChanged(QModelIndex, QModelIndex)"),\
                                 self.current_index, self.current_index)
 
-    def slot_new_folder(self):
+    def slot_new_folder(self, feed_dlg=None):
         new_floder_dlg = NewFolder(self.document, self)
         rtn = new_floder_dlg.exec_()
         if rtn:
             self.document.folder_list.append(new_floder_dlg.folder_name)
             self.treemodel.add_folder(new_floder_dlg.folder_name)
+            if feed_dlg:
+                feed_dlg.combo.addItem(new_floder_dlg.folder_name)
+                feed_dlg.combo.setCurrentIndex(feed_dlg.combo.count() - 1)
+
 
     def slot_refresh_feeds(self):
         self.movie = qt.QMovie(r"F:\pressy\windows\refresh.gif")
@@ -108,6 +136,7 @@ class NewFolder(qt.QDialog):
         self.document = document
         self.setup()
         self.setWindowTitle("New Folder")
+        self.resize(250,60)
 
     def setup(self):
         hlayout_u = qt.QHBoxLayout()
@@ -159,6 +188,7 @@ class NewFeed(qt.QDialog):
         self.document = document
         self.setup()
         self.setWindowTitle("New Feed")
+        self.resize(310, 85)
 
     def setup(self):
         hlayout_u = qt.QHBoxLayout()
@@ -172,6 +202,9 @@ class NewFeed(qt.QDialog):
         hlayout_m = qt.QHBoxLayout()
         self.label = qt.QLabel("Feed Folder", self)
         self.combo = qt.QComboBox(self)
+        policy = qt.QSizePolicy(qt.QSizePolicy.Expanding,
+                                qt.QSizePolicy.Fixed)
+        self.combo.setSizePolicy(policy)
         for folder in self.document.folder_list:
             self.combo.addItem(folder)
         self.combo.setCurrentIndex(0)
@@ -205,7 +238,7 @@ class NewFeed(qt.QDialog):
 
         self.connect(ok_button, qt.SIGNAL("clicked()"), self.accept)
         self.connect(cancel_button, qt.SIGNAL("clicked()"), self.reject)
-        self.connect(new_button, qt.SIGNAL("clicked()"), self.new_folder)
+        self.connect(new_button, qt.SIGNAL("clicked()"), lambda:self.new_folder(self))
 
         self.setLayout(vlayout)
 

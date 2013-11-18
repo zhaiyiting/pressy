@@ -59,8 +59,8 @@ class Document(object):
         if osp.exists(feeds_path):
             with open(feeds_path, 'rb') as f:
                 try:
-                    self.feedlist = pickle.load(f)
-                    if not self.feedlist:
+                    self.feedlist, self.folder_list = pickle.load(f)
+                    if not self.feedlist and not self.folder_list:
                         self.folder_list.append(u"Feeds")
                     return
                 except EOFError:
@@ -71,7 +71,7 @@ class Document(object):
         """ save all feeds """
         feeds_path = st.feeds_path
         with open(feeds_path, 'wb') as f:
-            pickle.dump(self.feedlist, f, pickle.HIGHEST_PROTOCOL)
+            pickle.dump((self.feedlist, self.folder_list), f, pickle.HIGHEST_PROTOCOL)
 
     def __check_feed(self, feed):
         res = fp.parse(feed.link)

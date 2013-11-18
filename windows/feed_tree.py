@@ -123,8 +123,12 @@ class TreeModel(qt.QAbstractItemModel):
 
         if not parentItem:
             return qt.QModelIndex()
-
-        return self.createIndex(parentItem.row(), 0, parentItem)
+        par_paritem = parentItem.parent()
+        if par_paritem:
+            return self.createIndex(parentItem.row(), 0, parentItem)
+        else:
+            row = self.folder_item.index(parentItem)
+            return self.createIndex(row, 0, parentItem)
 
     def hasChildren(self, parent=qt.QModelIndex()):
         if not parent.isValid():
@@ -146,11 +150,6 @@ class TreeModel(qt.QAbstractItemModel):
                 pra_index = it.index
                 pra_item = it
                 break
-        if not pra_index:
-            self.add_folder(folder)
-            pra_item = self.folder_item[-1]
-            pra_index = self.folder_item[-1].index
-
         start = pra_item.childCount()
         self.beginInsertRows(pra_index, start, start)
         new_item = TreeItem(feed, pra_item)
@@ -158,11 +157,13 @@ class TreeModel(qt.QAbstractItemModel):
         self.endInsertRows()
         return True
 
-    def add_feeds(self, feeds):
-        if not feeds:
+    def add_feeds(self, feeds, folders):
+        if not feeds and not folders:
             # add default folder
             self.add_folder(u"Feeds")
             return
+        for folder in folders:
+            self.add_folder(folder)
         for feed in feeds:
             self.add_feed(feed)
         return True
@@ -177,4 +178,19 @@ class TreeModel(qt.QAbstractItemModel):
         self.folder_item.append(new_item)
         self.endInsertRows()
         return True
+
+    def delete_feed(self, index):
+        parent = self.parent(index)
+        child_item = index.internalPointer()
+        parent_item = child_item.parentItem
+        row = child_item.row()
+        self.beginRemoveRows(parent, row, row)
+        parent_item.childItems.remove(child_item)
+        self.endRemoveRows()
+
+    def delete_folder(self, folder_name, folder_index):
+        parent = qt.QModelIndex()
+        self.beginRemoveRows(parent, folder_index, folder_index)
+        del self.folder_item[folder_index]
+        self.endRemoveRows()
 
