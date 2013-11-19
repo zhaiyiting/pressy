@@ -1,4 +1,5 @@
 import threading
+import time
 
 import pressy.qtall as qt
 import pressy.utils as ut
@@ -103,7 +104,12 @@ class MainWin(qt.QMainWindow):
     def make_connection(self):
         self.connect(self, qt.SIGNAL("add_feed"), self.feed_tree.slot_add_feed)
         self.connect(self.web_view, qt.SIGNAL("update_unread_num"), self.feed_tree.slotUpdateUnread)
+        self.connect(self.feed_tree, qt.SIGNAL("show_update_msg"), self.slot_show_update_msg)
 
+
+    def slot_show_update_msg(self):
+        msg = "%d feeds updated, %d itmes updated."%(self.document.update_feeds, self.document.update_items)
+        self.statusBar().showMessage(msg, msecs=10000)
 
     def slot_add_feed(self):
         """ read the feed link from line edit and add it to document"""
@@ -142,5 +148,7 @@ class MainWin(qt.QMainWindow):
 
     def closeEvent(self, e):
         """ save feeds before close window"""
+        while self.document.update:
+            time.sleep(0.5)
         self.document.save_feeds()
         e.accept()

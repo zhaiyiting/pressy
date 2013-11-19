@@ -39,13 +39,21 @@ class TreeItem(object):
     #    else:
     #        return False
 
-    #def __eq__(self, other):
-    #    if other.parentItem == self.parentItem and \
-    #        other.itemData == self.itemData and \
-    #        other.proj_index == self.proj_index:
-    #        return True
-    #    else:
-    #        return False
+    def __eq__(self, other):
+        other_item_data = other.itemData
+        self_item_data = self.itemData
+        if type(other_item_data) != type(self_item_data):
+            return False
+        if isinstance(self_item_data, unicode):
+            if self_item_data == other_item_data:
+                return True
+            else:
+                return False
+        else:
+            if self_item_data.id_ == other_item_data.id_:
+                return True
+            else:
+                return False
 
 class TreeModel(qt.QAbstractItemModel):
 
@@ -194,3 +202,16 @@ class TreeModel(qt.QAbstractItemModel):
         del self.folder_item[folder_index]
         self.endRemoveRows()
 
+    def update_feeds(self, feeds):
+        for feed in feeds:
+            folder = feed.folder
+            tree_item = TreeItem(folder)
+            if tree_item in self.folder_item:
+                index = self.folder_item.index(tree_item)
+                parent = self.folder_item[index]
+                feed_tree_item = TreeItem(feed)
+                if feed_tree_item in parent.childItems:
+                    feed_index = parent.childItems.index(feed_tree_item)
+                    item = parent.childItems[feed_index]
+                    index = item.index
+                    self.emit(qt.SIGNAL("dataChanged(QModelIndex, QModelIndex)"), index, index)

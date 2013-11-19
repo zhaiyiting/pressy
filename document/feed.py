@@ -45,6 +45,10 @@ class Document(object):
         self.icon_path = osp.join(st.common['app_path'],'windows','icons')
         self.folder_list = []
         self.load_feeds()
+        # this variable will used when user close the mainwindow
+        self.update = False
+        self.update_feeds = 0
+        self.update_items = 0
 
     def add_feed(self, link):
         """ add the new feed to feeds list"""
@@ -131,17 +135,36 @@ class Document(object):
         else:
             return 1
 
-    def refresh_all(self):
+    def refresh_all(self, f_update_feedtree, f_signal):
         """ refresh all feeds"""
         self.queue = Queue.Queue()
         self.slow_queue = Queue.Queue()
-        for feed in self.feedlist:
+        self.update_queue = Queue.Queue()
+        self.update_num = Queue.Queue()
+        self.f_update_tree = f_update_feedtree
+        self.f_signal = f_signal
+        self.update_feeds = 0
+        self.update_items = 0
+        # for thread safe
+        feed_list = self.feedlist[:]
+        for feed in feed_list:
             if feed.type_ != Feed.NONE_TYPE:
                 self.queue.put(feed)
             else:
                 self.slow_queue.put(feed)
-        update_thread = threading.Thread(target = self.refresh)
-        update_thread.start()
+        self.update_thread = threading.Thread(target = self.refresh)
+        self.update_thread.start()
+
+    def get_update_list(self):
+        self.update_list = []
+        while not self.update_queue.empty():
+            self.update_list.append(self.update_queue.get())
+
+    def get_update_item_num(self):
+        update_list = []
+        while not self.update_num.empty():
+            update_list.append(self.update_num.get())
+        return sum(update_list)
 
     def refresh(self):
         """ refresh all feeds"""
@@ -155,6 +178,13 @@ class Document(object):
         for thread in thread_list:
             thread.join()
 
+        self.update = True
+        self.get_update_list()
+        self.f_update_tree(self.update_list)
+        self.update = False
+
+        self.update_feeds += len(self.update_list)
+
         thread_list = []
         for i in range(thread_num):
             thread = threading.Thread(target = self._refresh_none)
@@ -164,12 +194,21 @@ class Document(object):
         for thread in thread_list:
             thread.join()
 
+        self.update = True
+        self.get_update_list()
+        self.f_update_tree(self.update_list)
+        self.update = False
+
+        self.update_feeds += len(self.update_list)
+        self.update_items += self.get_update_item_num()
+
+        self.f_signal()
+
     def _refresh_etag_modify(self):
         """ refresh the feed which has etag or modify head"""
         while 1:
             if self.queue.empty():
                 break
-            print "up quick"
             feed = self.queue.get()
             if feed.type_ == Feed.BOTH_TYPE:
                 re = fp.parse(feed.link, etag=feed.etag, modified=feed.modified)
@@ -186,7 +225,6 @@ class Document(object):
         while 1:
             if self.slow_queue.empty():
                 break
-            print "up slow"
             feed = self.slow_queue.get()
             re = fp.parse(feed.link)
             if hasattr(re, "status"):
@@ -204,7 +242,10 @@ class Document(object):
                 new_entrie_list.append(entr)
             else:
                 break
+        if new_entrie_list:
+            self.update_queue.put(feed)
         feed.entries = new_entrie_list + feed.entries
+        self.update_num.put(len(new_entrie_list))
         if feed.type_ == Feed.BOTH_TYPE:
             feed.etag = re.etag
             feed.modified = re.modified

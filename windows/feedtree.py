@@ -109,7 +109,14 @@ class FeedTree(qt.QWidget):
         self.movie = qt.QMovie(r"F:\pressy\windows\refresh.gif")
         qt.QObject.connect(self.movie, qt.SIGNAL("frameChanged(int)"),self.slot_refresh_icon)
         self.movie.start()
-        self.document.refresh_all()
+        def f_signal():
+            self.emit(qt.SIGNAL("update_finished"))
+        self.connect(self, qt.SIGNAL("update_finished"), self.slot_refresh_finish)
+        self.document.refresh_all(self.treemodel.update_feeds, f_signal)
+
+    def slot_refresh_finish(self):
+        self.movie.stop()
+        self.emit(qt.SIGNAL("show_update_msg"))
 
     def slot_refresh_icon(self, frame):
         self.refresh_feed_btn.setIcon(qt.QIcon(self.movie.currentPixmap()))
