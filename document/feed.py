@@ -254,13 +254,3 @@ class Document(object):
         elif feed.type_ == Feed.ETAG_TYPE:
             feed.etag = re.etag
 
-if __name__ == "__main__":
-    core = Core()
-    #core.add_feed("http://coolshell.cn/feed")
-    #core.add_feed("http://www.ruanyifeng.com/blog/atom.xml")
-    core.add_feed("http://www.yinwang.org/atom.xml")
-    print core.feedlist[-1].type_
-    print core.feedlist[-1].icon
-    print core.feedlist[-1].title
-
-

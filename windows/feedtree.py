@@ -61,6 +61,25 @@ class FeedTree(qt.QWidget):
         self.connect(self.treeview, qt.SIGNAL("clicked(const QModelIndex &)"),
                      self.slotTreeItemClicked)
 
+        before = self.treeview.mouseReleaseEvent
+        def mouseReleaseEvent(e):
+            if e.button() == qt.Qt.LeftButton:
+                before(e)
+        self.treeview.mouseReleaseEvent = mouseReleaseEvent
+
+
+
+
+    def contextMenuEvent(self, event):
+        """ rename or mark all read"""
+        pos = event.pos()
+        pos = self.treeview.mapFromParent(pos)
+        index = self.treeview.indexAt(pos)
+        if not index.isValid():
+            return
+        print "ok"
+        event.accept()
+
     def slot_del_feed_folder(self):
         if self.current_index:
             item = self.current_index.internalPointer()
