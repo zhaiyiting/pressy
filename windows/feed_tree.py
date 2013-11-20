@@ -215,3 +215,20 @@ class TreeModel(qt.QAbstractItemModel):
                     item = parent.childItems[feed_index]
                     index = item.index
                     self.emit(qt.SIGNAL("dataChanged(QModelIndex, QModelIndex)"), index, index)
+
+    def mark_all_read(self, item):
+        feed = item.itemData
+        if isinstance(feed, unicode):
+            for child in item.childItems:
+                feed = child.itemData
+                for entrie in feed.entries:
+                    entrie.has_read = True
+                index = child.index
+                self.emit(qt.SIGNAL("dataChanged(QModelIndex, QModelIndex)"), index, index)
+        else:
+            for entrie in feed.entries:
+                entrie.has_read = True
+            index = item.index
+            self.emit(qt.SIGNAL("dataChanged(QModelIndex, QModelIndex)"), index, index)
+
+

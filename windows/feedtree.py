@@ -47,8 +47,8 @@ class FeedTree(qt.QWidget):
         self.treeview = qt.QTreeView(self)
         self.treeview.setModel(self.treemodel)
         self.treeview.setHeaderHidden(True)
-        self.treeview.expandAll()
         self.treemodel.add_feeds(self.document.feedlist, self.document.folder_list)
+        self.treeview.expandAll()
 
         layout.addLayout(btn_layout)
         layout.addWidget(self.treeview)
@@ -67,9 +67,6 @@ class FeedTree(qt.QWidget):
                 before(e)
         self.treeview.mouseReleaseEvent = mouseReleaseEvent
 
-
-
-
     def contextMenuEvent(self, event):
         """ rename or mark all read"""
         pos = event.pos()
@@ -77,8 +74,23 @@ class FeedTree(qt.QWidget):
         index = self.treeview.indexAt(pos)
         if not index.isValid():
             return
-        print "ok"
+        item = index.internalPointer()
+        a_rename = ut.makeAction(self, "rename the feed", "&Rename",
+                                 lambda: self.slot_rename_item(index))
+        a_markall = ut.makeAction(self, "mark all read", "&Mark all read",
+                                 lambda : self.slot_mark_all_read(item))
+        m = qt.QMenu(self)
+        m.addAction(a_rename)
+        m.addAction(a_markall)
+        m.exec_(self.mapToGlobal(event.pos()))
         event.accept()
+
+    def slot_mark_all_read(self, item):
+        self.treemodel.mark_all_read(item)
+
+    def slot_rename_item(self, index):
+        rename_dlg = NewName(index, self)
+        rename_dlg.exec_()
 
     def slot_del_feed_folder(self):
         if self.current_index:
@@ -277,5 +289,66 @@ class NewFeed(qt.QDialog):
     def reject(self):
         del self.document.feedlist[-1]
         super(NewFeed, self).reject()
+
+class NewName(qt.QDialog):
+    def __init__(self, index, parent=None):
+        qt.QDialog.__init__(self, parent)
+        self.index = index
+        self.folder_list = parent.document.folder_list
+        self.tree_model = parent.treemodel
+        self.setWindowTitle("New Name")
+        self.resize(250, 80)
+
+        self.name_edit = qt.QLineEdit(self)
+        self.name_edit.setPlaceholderText("new name")
+
+        self.ok_btn = qt.QPushButton("Ok", self)
+        self.cancel_btn = qt.QPushButton("Cancel", self)
+
+        self.ok_btn.clicked.connect(self.accept)
+        self.cancel_btn.clicked.connect(self.reject)
+        self.ok_btn.setFocus()
+
+        layout = qt.QVBoxLayout()
+        layout.addWidget(self.name_edit)
+
+        buttonLayout = qt.QHBoxLayout()
+        spancerItem2 = qt.QSpacerItem(40, 20, qt.QSizePolicy.Expanding, qt.QSizePolicy.Minimum)
+        buttonLayout.addItem(spancerItem2)
+        buttonLayout.addWidget(self.ok_btn)
+        buttonLayout.addWidget(self.cancel_btn)
+
+        layout.addLayout(buttonLayout)
+
+        self.setLayout(layout)
+
+    def accept(self):
+        name = unicode(self.name_edit.text())
+        if name:
+            item = self.index.internalPointer()
+            item_data = item.itemData
+            if isinstance(item_data, unicode):
+                if not name in self.folder_list:
+                    old_name = item.itemData
+                    name_index = self.folder_list.index(old_name)
+                    self.folder_list.remove(old_name)
+                    self.folder_list.insert(name_index, name)
+                    item.itemData = name
+                    for child in item.childItems:
+                        feed = child.itemData
+                        feed.folder = name
+                    self.tree_model.emit(qt.SIGNAL("dataChanged(QModelIndex, QModelIndex)"),
+                              self.index, self.index)
+                else:
+                    qt.QMessageBox.warning(
+                        self, "Error - Pressy",
+                        'The folder name "%s" has already exists'%name)
+            else:
+                feed = item.itemData
+                feed.title = name
+                self.tree_model.emit(qt.SIGNAL("dataChanged(QModelIndex, QModelIndex)"),
+                                     self.index, self.index)
+
+            super(NewName, self).accept()
 
 

@@ -32,11 +32,10 @@ class Feed(object):
 
 
 class Entrie(object):
-    def __init__(self, title, link, has_read=False):
+    def __init__(self, title, link, has_read=True):
         self.title = title
         self.link = link
         self.has_read = has_read
-
 
 class Document(object):
 
@@ -108,10 +107,12 @@ class Document(object):
             #------------------- initial the feed info -------------------------
             feed.title = res.feed.title
             feed.id_ = "%d"%time.time()
-            for entrie in res.entries:
+            for i, entrie in enumerate(res.entries):
                 title = entrie.title
                 link = entrie.link
                 entr = Entrie(title, link)
+                if i < 5:
+                    entr.has_read = False
                 feed.entries.append(entr)
             # try to get the feed's icon
             f = res.feed
