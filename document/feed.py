@@ -52,7 +52,18 @@ class Document(object):
     def add_feed(self, link):
         """ add the new feed to feeds list"""
         feed = Feed(link)
-        if self.__check_feed(feed):
+        feed_link = feed.link.lower()
+        if not feed_link.startswith("http"):
+            feed_link = "http://" + feed.link
+        feed_link = feed_link.strip('/')
+        is_feed = False
+        key_list = ['', '/atom', '/feed']
+        for key in key_list:
+            feed.link = feed_link + key
+            if not self.__check_feed(feed):
+                is_feed = True
+                break
+        if not is_feed:
             return 1
         self.feedlist.append(feed)
 
@@ -87,6 +98,8 @@ class Document(object):
                     feed.etag = res.etag
                 if hasattr(res, "modified"):
                     feed.modified = res.modified
+                if not 'title' in res.feed:
+                    return 1
 
                 # support both? check again (need to confirm the request header does work!)
                 if feed.etag and feed.modified:

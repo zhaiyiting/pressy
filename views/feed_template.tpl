@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>{{feed.title}}</title>
-<h1><a href={{feed.link}}>{{feed.title}}</a></h1>
+<h2><a href={{feed.link}}>{{feed.title}}</a></h2>
 </head>
 <body>
     <ul>

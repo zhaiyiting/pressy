@@ -6,4 +6,3 @@ common = {
 
 feeds_path = osp.join(common['app_path'], "feeds", 'feeds')
 icon_path = osp.join(common['app_path'], "windows", 'icons')
-        

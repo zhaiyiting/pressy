@@ -1,6 +1,8 @@
+import os.path as osp
 import time
 import pressy.qtall as qt
 import pressy.utils as ut
+import pressy.setting as st
 import pressy.windows.feed_tree as ft
 from modeltest import ModelTest
 
@@ -137,7 +139,9 @@ class FeedTree(qt.QWidget):
 
 
     def slot_refresh_feeds(self):
-        self.movie = qt.QMovie(r"F:\pressy\windows\refresh.gif")
+        imagdir = osp.join(st.common['app_path'],'windows','icons')
+        gif = osp.join(imagdir, 'refresh.gif')
+        self.movie = qt.QMovie(gif)
         qt.QObject.connect(self.movie, qt.SIGNAL("frameChanged(int)"),self.slot_refresh_icon)
         self.movie.start()
         def f_signal():
