@@ -1,4 +1,4 @@
-from bottle import run, get, redirect, view
+from bottle import run, get, redirect, view, static_file
 
 global doc
 def run_server(document):
@@ -17,7 +17,7 @@ def get_feed(id_):
 @view('feed_template')
 def feed_page(id_):
     feed = get_feed(id_)
-    return dict(feed = feed)
+    return dict(feed=feed)
 
 @get('/entries/<id_>/<index>')
 def entrie_page(id_, index):
@@ -26,6 +26,11 @@ def entrie_page(id_, index):
     entrie.has_read = True
     link = entrie.link
     redirect(link)
+
+@get('/<filename>')
+def images(filename):
+    return static_file(filename, root="/icons")
+
     
 
 

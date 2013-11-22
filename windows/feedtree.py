@@ -31,8 +31,13 @@ class FeedTree(qt.QWidget):
         self.delete_btn = ut.create_toolbutton(self, icon = "delete",
                                                    tip = "delete one feed or folder",
                                                    triggered = self.slot_del_feed_folder)
-        self.delete_btn.setIconSize(qt.QSize(18,18))
+        self.delete_btn.setIconSize(qt.QSize(18, 18))
         btn_layout.addWidget(self.delete_btn)
+        imagdir = st.icon_path
+        gif = osp.join(imagdir, 'refresh.gif')
+        self.movie = qt.QMovie(gif)
+        qt.QObject.connect(self.movie, qt.SIGNAL("frameChanged(int)"), self.slot_refresh_icon)
+        self.refresh_feed_btn.setIcon(qt.QIcon(gif))
 
 
         self.pin_btn = ut.create_toolbutton(self, icon = "pin",
@@ -137,10 +142,6 @@ class FeedTree(qt.QWidget):
 
 
     def slot_refresh_feeds(self):
-        imagdir = osp.join(st.common['app_path'],'windows','icons')
-        gif = osp.join(imagdir, 'refresh.gif')
-        self.movie = qt.QMovie(gif)
-        qt.QObject.connect(self.movie, qt.SIGNAL("frameChanged(int)"),self.slot_refresh_icon)
         self.movie.start()
         def f_signal():
             self.emit(qt.SIGNAL("update_finished"))

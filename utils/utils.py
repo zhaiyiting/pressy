@@ -3,7 +3,7 @@ import pressy.setting as st
 import pressy.qtall as qt
 
 _iconcache = {}
-imagdir = osp.join(st.common['app_path'],'windows','icons') 
+imagdir = st.icon_path
 def getIcon(icon):
     '''Return a cached QIconSet for the filename in the icons directory'''
     if icon not in _iconcache:

@@ -255,6 +255,7 @@ class Document(object):
             if title != old_first_entrie_title:
                 link = entrie.link
                 entr = Entrie(title, link)
+                entr.has_read = False
                 new_entrie_list.append(entr)
             else:
                 break

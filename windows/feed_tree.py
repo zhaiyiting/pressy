@@ -155,7 +155,7 @@ class TreeModel(qt.QAbstractItemModel):
         for i,it in enumerate(self.folder_item):
             item_data = it.itemData
             if item_data == folder:
-                pra_index = self.index(i, 1, qt.QModelIndex())
+                pra_index = self.index(i, 0, qt.QModelIndex())
                 pra_item = it
                 break
         start = pra_item.childCount()
