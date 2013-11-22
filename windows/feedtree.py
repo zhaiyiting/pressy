@@ -4,7 +4,6 @@ import pressy.qtall as qt
 import pressy.utils as ut
 import pressy.setting as st
 import pressy.windows.feed_tree as ft
-from modeltest import ModelTest
 
 class FeedTree(qt.QWidget):
 
@@ -45,7 +44,6 @@ class FeedTree(qt.QWidget):
         self.document = document
         self.parentwin = parentwin
         self.treemodel = ft.TreeModel()
-        self.modeltest = ModelTest(self.treemodel, None)
         self.treeview = qt.QTreeView(self)
         self.treeview.setModel(self.treemodel)
         self.treeview.setHeaderHidden(True)

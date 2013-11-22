@@ -57,12 +57,14 @@ class Document(object):
             feed_link = "http://" + feed.link
         feed_link = feed_link.strip('/')
         is_feed = False
-        key_list = ['', '/atom', '/feed']
+        key_list = ['', '/', '/atom', '/feed']
+        feed.ori_link = feed_link
         for key in key_list:
             feed.link = feed_link + key
             if not self.__check_feed(feed):
                 is_feed = True
                 break
+            feed.link = feed.ori_link
         if not is_feed:
             return 1
         self.feedlist.append(feed)
