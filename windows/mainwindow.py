@@ -114,6 +114,11 @@ class MainWin(qt.QMainWindow):
     def slot_add_feed(self):
         """ read the feed link from line edit and add it to document"""
         feed_link = unicode(self.add_new_edit.text())
+        if not feed_link:
+            qt.QMessageBox.information(
+                    self, "Info - Pressy",
+                    "Please put the feed link to left edit.")
+            return 
         if self.document.add_feed(feed_link):
             qt.QMessageBox.warning(
                     self, "Error - Pressy",

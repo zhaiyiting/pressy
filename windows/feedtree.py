@@ -103,16 +103,26 @@ class FeedTree(qt.QWidget):
             item_data = item.itemData
             if isinstance(item_data, unicode):
                 folder_name = item_data
-                for child in item.childItems:
-                    feed = child.itemData
-                    self.document.feedlist.remove(feed)
-                folder_index = self.document.folder_list.index(folder_name)
-                self.treemodel.delete_folder(folder_name, folder_index)
-                self.document.folder_list.remove(folder_name)
+                ret = qt.QMessageBox.question(
+                                self, "Question - Pressy",
+                                "Do you want to remove folder '%s'?"%folder_name,
+                                defaultButton = qt.QMessageBox.Cancel)
+                if ret:
+                    for child in item.childItems:
+                        feed = child.itemData
+                        self.document.feedlist.remove(feed)
+                    folder_index = self.document.folder_list.index(folder_name)
+                    self.treemodel.delete_folder(folder_name, folder_index)
+                    self.document.folder_list.remove(folder_name)
             else:
                 feed = self.current_index.internalPointer().itemData
-                self.treemodel.delete_feed(self.current_index)
-                self.document.feedlist.remove(feed)
+                feed_name = feed.title
+                ret = qt.QMessageBox.question(
+                                self, "Question - Pressy",
+                                "Do you want to remove feed '%s'?"%feed_name)
+                if ret:
+                    self.treemodel.delete_feed(self.current_index)
+                    self.document.feedlist.remove(feed)
 
     def slotTreeItemClicked(self, index):
         """ generate the link """
