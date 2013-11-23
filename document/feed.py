@@ -41,7 +41,7 @@ class Document(object):
 
     def __init__(self):
         self.feedlist = []
-        self.icon_path = osp.join(st.common['app_path'],'windows','icons')
+        self.icon_path = st.icon_path
         self.folder_list = []
         self.load_feeds()
         # this variable will used when user close the mainwindow
