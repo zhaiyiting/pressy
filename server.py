@@ -1,10 +1,13 @@
-from bottle import run, get, redirect, view, static_file
+from flask import Flask
+from flask import render_template, redirect, url_for
+app = Flask(__name__)
+#from bottle import run, get, redirect, view, static_file
 
 global doc
 def run_server(document):
     global doc
     doc = document
-    run(host='localhost', port=8080)
+    app.run(host='localhost', port=5000)
 
 def get_feed(id_):
     global doc
@@ -13,24 +16,15 @@ def get_feed(id_):
         if feed.id_ == id_:
             return feed
 
-@get('/feed/<id_>')
-@view('feed_template')
+@app.route('/feed/<id_>')
 def feed_page(id_):
     feed = get_feed(id_)
-    return dict(feed=feed)
+    return render_template('feed_template.html', feed=feed)
 
-@get('/entries/<id_>/<index>')
+@app.route('/entries/<id_>/<index>')
 def entrie_page(id_, index):
     feed = get_feed(id_)
     entrie = feed.entries[int(index)]
     entrie.has_read = True
     link = entrie.link
-    redirect(link)
-
-@get('/<filename>')
-def images(filename):
-    return static_file(filename, root="/icons")
-
-    
-
-
+    return redirect(link)

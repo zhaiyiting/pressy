@@ -121,7 +121,7 @@ class FeedTree(qt.QWidget):
         item_data = item.itemData
         if not isinstance(item_data, unicode):
             if item_data.id_:
-                link = "http://localhost:8080/feed/%s"%item_data.id_
+                link = "http://localhost:5000/feed/%s"%item_data.id_
                 webview = self.parentwin.web_view
                 webview.setUrl(qt.QUrl(link))
 
