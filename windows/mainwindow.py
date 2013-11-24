@@ -80,21 +80,19 @@ class MainWin(qt.QMainWindow):
 
     def setup(self):
         self.splitter = qt.QSplitter(self)
+        self.splitter.setHandleWidth(1)
         self.feed_tree = FeedTree(self.document, self)
         self.splitter.addWidget(self.feed_tree)
 
         self.web_view = FeedExplorer(self.document, self)
 
-        self.holder = qt.QWidget(self)
-        policy = qt.QSizePolicy(qt.QSizePolicy.Fixed,
-                                qt.QSizePolicy.Expanding)
-        def sizeHint():
-            return qt.QSize(10, 500)
-
+        self.holder = qt.QFrame(self)
+        self.holder.setFrameStyle(qt.QFrame.Panel | qt.QFrame.Raised)
         def enterEvent(e):
             self.holder.hide()
             self.feed_tree.show()
-        self.holder.sizeHint = sizeHint
+            self.splitter.setSizes(self.tree_splitter_sizes)
+
         self.holder.enterEvent = enterEvent
         self.holder.hide()
         self.splitter.addWidget(self.holder)
@@ -102,8 +100,12 @@ class MainWin(qt.QMainWindow):
         self.splitter.addWidget(self.web_view)
 
         self.splitter.setStretchFactor(0, 2)
+        self.splitter.setStretchFactor(1, 2)
         self.splitter.setStretchFactor(2, 3)
         self.setCentralWidget(self.splitter)
+        
+        self.connect(self.splitter, qt.SIGNAL("splitterMoved(int, int)"),
+                self.slot_save_size)
 
 
         self.web_view.titleChanged.connect(self.adjustTitle)
@@ -115,6 +117,10 @@ class MainWin(qt.QMainWindow):
         self.connect(self.web_view, qt.SIGNAL("update_unread_num"), self.feed_tree.slotUpdateUnread)
         self.connect(self.feed_tree, qt.SIGNAL("show_update_msg"), self.slot_show_update_msg)
         self.connect(self.add_new_edit, qt.SIGNAL("set_link"), self.slot_set_link)
+
+    def slot_save_size(self):
+        if self.feed_tree.isVisible():
+            self.tree_splitter_sizes = self.splitter.sizes()
 
     def slot_set_link(self, link):
         if not link.startswith("http:"):
@@ -176,6 +182,7 @@ class MainWin(qt.QMainWindow):
         self.activateWindow()
         self.add_new_edit.setFocus()
         super(MainWin, self).showEvent(e)
+        self.tree_splitter_sizes = self.splitter.sizes()
 
     def closeEvent(self, e):
         """ save feeds before close window"""

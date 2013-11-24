@@ -166,16 +166,15 @@ class FeedTree(qt.QWidget):
         self.refresh_feed_btn.setIcon(qt.QIcon(self.movie.currentPixmap()))
 
     def slot_auto_hide(self):
-        if not self.pin_btn.isChecked():
-            self.show()
-            self.parent().parent().holder.hide()
+        pass
 
     def leaveEvent(self, e):
         if self.pin_btn.isChecked():
+            main_win = self.parent().parent()
+            main_win.holder.show()
             self.hide()
-            holder = self.parent().parent().holder
-            holder.show()
-            holder.resize(10, 500)
+            re_size_list = [0, 10, main_win.splitter.size().width() - 15]
+            main_win.splitter.setSizes(re_size_list)
 
     def slot_add_feed(self, feed):
         new_dlg = NewFeed(feed, self.document, self)
