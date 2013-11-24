@@ -65,9 +65,18 @@ class MainWin(qt.QMainWindow):
         web_toolBar.addAction(self.web_view.pageAction(qt.QtWebKit.QWebPage.Stop))
 
         self.add_new_edit = qt.QLineEdit(web_toolBar)
+        ori_event_handler = self.add_new_edit.keyPressEvent
+        def keyPressEvent(e):
+            key = e.key()
+            if key == qt.Qt.Key_Enter or key == qt.Qt.Key_Return:
+                self.add_new_edit.emit(qt.SIGNAL("set_link"), unicode(self.add_new_edit.text())) 
+            else:
+                ori_event_handler(e)
+        self.add_new_edit.keyPressEvent = keyPressEvent
         web_toolBar.insertWidget(None, self.add_new_edit)
         ut.addToolbarActions(web_toolBar, self.actions, ('feed.add',))
         self.addToolBar(qt.Qt.TopToolBarArea, web_toolBar)
+        self.web_view.urlChanged.connect(self.slot_set_url) 
 
     def setup(self):
         self.splitter = qt.QSplitter(self)
@@ -105,7 +114,16 @@ class MainWin(qt.QMainWindow):
         self.connect(self, qt.SIGNAL("add_feed"), self.feed_tree.slot_add_feed)
         self.connect(self.web_view, qt.SIGNAL("update_unread_num"), self.feed_tree.slotUpdateUnread)
         self.connect(self.feed_tree, qt.SIGNAL("show_update_msg"), self.slot_show_update_msg)
+        self.connect(self.add_new_edit, qt.SIGNAL("set_link"), self.slot_set_link)
 
+    def slot_set_link(self, link):
+        if not link.startswith("http:"):
+            link = "http://" + link
+        self.web_view.setUrl(qt.QUrl(link))
+
+    def slot_set_url(self, url):
+        url = url.toString()
+        self.add_new_edit.setText(url)
 
     def slot_show_update_msg(self):
         msg = "%d feeds updated, %d itmes updated."%(self.document.update_feeds, self.document.update_items)
@@ -135,6 +153,8 @@ class MainWin(qt.QMainWindow):
             self.progress_bar.show()
         self.web_view.progress = p
         self.progress_bar.setValue(p)
+        if p == 100:
+            self.finishLoading()
 
     def finishLoading(self):
         self.web_view.progress = 100
@@ -150,6 +170,12 @@ class MainWin(qt.QMainWindow):
         thread = threading.Thread(target=run_server, args=(self.document,))
         thread.setDaemon(True)
         thread.start()
+
+    def showEvent(self, e):
+        """ set the link editor focus """
+        self.activateWindow()
+        self.add_new_edit.setFocus()
+        super(MainWin, self).showEvent(e)
 
     def closeEvent(self, e):
         """ save feeds before close window"""

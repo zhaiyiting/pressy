@@ -106,8 +106,8 @@ class FeedTree(qt.QWidget):
                 ret = qt.QMessageBox.question(
                                 self, "Question - Pressy",
                                 "Do you want to remove folder '%s'?"%folder_name,
-                                defaultButton = qt.QMessageBox.Cancel)
-                if ret:
+                                 qt.QMessageBox.Cancel | qt.QMessageBox.Ok)
+                if ret == qt.QMessageBox.Ok:
                     for child in item.childItems:
                         feed = child.itemData
                         self.document.feedlist.remove(feed)
@@ -119,8 +119,9 @@ class FeedTree(qt.QWidget):
                 feed_name = feed.title
                 ret = qt.QMessageBox.question(
                                 self, "Question - Pressy",
-                                "Do you want to remove feed '%s'?"%feed_name)
-                if ret:
+                                "Do you want to remove feed '%s'?"%feed_name,
+                                 qt.QMessageBox.Cancel | qt.QMessageBox.Ok)
+                if ret == qt.QMessageBox.Ok:
                     self.treemodel.delete_feed(self.current_index)
                     self.document.feedlist.remove(feed)
 
@@ -150,7 +151,6 @@ class FeedTree(qt.QWidget):
                 feed_dlg.combo.addItem(new_floder_dlg.folder_name)
                 feed_dlg.combo.setCurrentIndex(feed_dlg.combo.count() - 1)
 
-
     def slot_refresh_feeds(self):
         self.movie.start()
         def f_signal():
@@ -173,7 +173,9 @@ class FeedTree(qt.QWidget):
     def leaveEvent(self, e):
         if self.pin_btn.isChecked():
             self.hide()
-            self.parent().parent().holder.show()
+            holder = self.parent().parent().holder
+            holder.show()
+            holder.resize(10, 500)
 
     def slot_add_feed(self, feed):
         new_dlg = NewFeed(feed, self.document, self)
