@@ -85,6 +85,9 @@ class MainWin(qt.QMainWindow):
         self.splitter.addWidget(self.feed_tree)
 
         self.web_view = FeedExplorer(self.document, self)
+        self.web_view.page().setLinkDelegationPolicy(qt.QWebPage.DelegateAllLinks)
+        self.connect(self.web_view, qt.SIGNAL("linkClicked(QUrl)"), lambda url:
+                self.web_view.setUrl(url))
 
         self.holder = qt.QFrame(self)
         self.holder.setFrameStyle(qt.QFrame.Panel | qt.QFrame.Raised)
