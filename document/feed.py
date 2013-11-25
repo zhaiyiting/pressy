@@ -23,6 +23,7 @@ class Feed(object):
         self.entries = []
         self.id_ = ""
         self.folder = u"Feeds"
+        self.href = ""
 
     def __eq__(self, other):
         if self.id_ == other.id_:
@@ -133,20 +134,23 @@ class Document(object):
             f = res.feed
             if hasattr(f, "link"):
                 link = f.link
+                feed.href = link
+                print link
                 icon_link = "http://www.google.com/s2/favicons?domain=%s"%(link)
-                #try:
-                icon = urllib2.urlopen(icon_link).read()
-                icon_name = "icon_%s"%feed.id_
-                path = osp.join(self.icon_path, icon_name+'.png') 
-                if icon.find("html") != -1:
-                    feed.icon = "default"
-                else:
-                    with open(path, 'wb') as f:
-                        f.write(icon)
-                    feed.icon = icon_name
-                #except BaseException:
-                #    feed.icon = None
+                try:
+                    icon = urllib2.urlopen(icon_link).read()
+                    icon_name = "icon_%s"%feed.id_
+                    path = osp.join(self.icon_path, icon_name+'.png') 
+                    if icon.find("html") != -1:
+                        feed.icon = "default"
+                    else:
+                        with open(path, 'wb') as f:
+                            f.write(icon)
+                        feed.icon = icon_name
+                except BaseException:
+                    feed.icon = None
             else:
+                feed.href = feed.link
                 feed.icon = "default"
         else:
             return 1
@@ -249,11 +253,11 @@ class Document(object):
 
     def __add_new_entrie(self, re, feed):
         new_entrie_list = []
-        old_first_entrie_title = feed.entries[0].title
+        old_first_entrie_link = feed.entries[0].link
         for entrie in re.entries:
-            title = entrie.title
-            if title != old_first_entrie_title:
-                link = entrie.link
+            link = entrie.link
+            if link != old_first_entrie_link:
+                title = entrie.title
                 entr = Entrie(title, link)
                 entr.has_read = False
                 new_entrie_list.append(entr)

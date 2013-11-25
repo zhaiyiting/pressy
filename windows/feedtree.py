@@ -21,7 +21,7 @@ class FeedTree(qt.QWidget):
         btn_layout.addWidget(self.refresh_feed_btn)
 
         # new folder tool button
-        self.new_folder_btn = ut.create_toolbutton(self, icon = "folder",
+        self.new_folder_btn = ut.create_toolbutton(self, icon = "add_folder",
                                                    tip = "create a new folder",
                                                    triggered = self.slot_new_folder)
         self.new_folder_btn.setIconSize(qt.QSize(18,18))
@@ -40,7 +40,7 @@ class FeedTree(qt.QWidget):
         self.refresh_feed_btn.setIcon(qt.QIcon(gif))
 
 
-        self.pin_btn = ut.create_toolbutton(self, icon = "pin",
+        self.pin_btn = ut.create_toolbutton(self, icon = "pin_hold",
                                        toggled = self.slot_auto_hide)
         self.pin_btn.setIconSize(qt.QSize(18,18))
         btn_layout.addStretch()
@@ -78,15 +78,27 @@ class FeedTree(qt.QWidget):
         pos = self.treeview.mapFromParent(pos)
         index = self.treeview.indexAt(pos)
         if not index.isValid():
+            a_refresh = ut.makeAction(self, "refresh all feeds", "&Refresh",
+                                      self.slot_refresh_feeds, icon="feed_refresh")
+            a_newfolder = ut.makeAction(self, "create a new folder", "New",
+                                        self.slot_new_folder, icon="add_folder")
+            m = qt.QMenu(self)
+            m.addAction(a_refresh)
+            m.addAction(a_newfolder)
+            m.exec_(self.mapToGlobal(event.pos()))
+            event.accept()
             return
         item = index.internalPointer()
         a_rename = ut.makeAction(self, "rename the feed", "&Rename",
-                                 lambda: self.slot_rename_item(index))
+                                 lambda: self.slot_rename_item(index), icon="rename")
         a_markall = ut.makeAction(self, "mark all read", "&Mark all read",
-                                 lambda : self.slot_mark_all_read(item))
+                                 lambda : self.slot_mark_all_read(item), icon="mark")
+        a_delete = ut.makeAction(self, "delete one feed or folder", "&Delete",
+                                 self.slot_del_feed_folder, icon="delete")
         m = qt.QMenu(self)
         m.addAction(a_rename)
         m.addAction(a_markall)
+        m.addAction(a_delete)
         m.exec_(self.mapToGlobal(event.pos()))
         event.accept()
 
@@ -98,8 +110,11 @@ class FeedTree(qt.QWidget):
         rename_dlg.exec_()
 
     def slot_del_feed_folder(self):
-        if self.current_index:
-            item = self.current_index.internalPointer()
+        current_index = self.treeview.currentIndex()
+        if current_index:
+            item = current_index.internalPointer()
+            if not item:
+                return
             item_data = item.itemData
             if isinstance(item_data, unicode):
                 folder_name = item_data
@@ -115,14 +130,14 @@ class FeedTree(qt.QWidget):
                     self.treemodel.delete_folder(folder_name, folder_index)
                     self.document.folder_list.remove(folder_name)
             else:
-                feed = self.current_index.internalPointer().itemData
+                feed = current_index.internalPointer().itemData
                 feed_name = feed.title
                 ret = qt.QMessageBox.question(
                                 self, "Question - Pressy",
                                 "Do you want to remove feed '%s'?"%feed_name,
                                  qt.QMessageBox.Cancel | qt.QMessageBox.Ok)
                 if ret == qt.QMessageBox.Ok:
-                    self.treemodel.delete_feed(self.current_index)
+                    self.treemodel.delete_feed(current_index)
                     self.document.feedlist.remove(feed)
 
     def slotTreeItemClicked(self, index):
@@ -166,7 +181,10 @@ class FeedTree(qt.QWidget):
         self.refresh_feed_btn.setIcon(qt.QIcon(self.movie.currentPixmap()))
 
     def slot_auto_hide(self):
-        pass
+        if self.pin_btn.isChecked():
+            self.pin_btn.setIcon(ut.getIcon("pin_release"))
+        else:
+            self.pin_btn.setIcon(ut.getIcon("pin_hold"))
 
     def leaveEvent(self, e):
         if self.pin_btn.isChecked():
@@ -179,6 +197,7 @@ class FeedTree(qt.QWidget):
     def slot_add_feed(self, feed):
         new_dlg = NewFeed(feed, self.document, self)
         rtn = new_dlg.exec_()
+        self.treeview.expandAll()
 
 
 class NewFolder(qt.QDialog):
@@ -216,6 +235,8 @@ class NewFolder(qt.QDialog):
         vlayout = qt.QVBoxLayout(self)
         vlayout.addLayout(hlayout_u)
         vlayout.addLayout(hlayout_d)
+
+        self.edit.setFocus()
 
         self.connect(ok_button, qt.SIGNAL("clicked()"), self.accept)
         self.connect(cancel_button, qt.SIGNAL("clicked()"), self.reject)
@@ -331,6 +352,8 @@ class NewName(qt.QDialog):
         buttonLayout.addItem(spancerItem2)
         buttonLayout.addWidget(self.ok_btn)
         buttonLayout.addWidget(self.cancel_btn)
+
+        self.name_edit.setFocus()
 
         layout.addLayout(buttonLayout)
 

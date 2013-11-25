@@ -1,5 +1,6 @@
 import threading
 import time
+import webbrowser
 
 import pressy.qtall as qt
 import pressy.utils as ut
@@ -51,10 +52,10 @@ class MainWin(qt.QMainWindow):
                 a(self, "add a feed", "&Add a feed",
                   self.slot_add_feed,
                   icon = "feed_add", key = None), 
-                'feed.refresh':
-                a(self, "refresh feeds", "&Fresh feeds",
-                  self.slot_refresh_feeds,
-                  icon = "feed_refresh", key = None),
+                'link.jump':
+                a(self, "jump to browser", "&Jump",
+                  self.slot_jump_browser,
+                  icon = "jump", key = None),
                 }
 
         # create toolbar
@@ -74,7 +75,7 @@ class MainWin(qt.QMainWindow):
                 ori_event_handler(e)
         self.add_new_edit.keyPressEvent = keyPressEvent
         web_toolBar.insertWidget(None, self.add_new_edit)
-        ut.addToolbarActions(web_toolBar, self.actions, ('feed.add',))
+        ut.addToolbarActions(web_toolBar, self.actions, ('feed.add', 'link.jump'))
         self.addToolBar(qt.Qt.TopToolBarArea, web_toolBar)
         self.web_view.urlChanged.connect(self.slot_set_url) 
 
@@ -153,9 +154,6 @@ class MainWin(qt.QMainWindow):
         else:
             self.emit(qt.SIGNAL("add_feed"), self.document.feedlist[-1])
 
-    def slot_refresh_feeds(self):
-        self.document.refresh_all()
-
     def setProgress(self, p ):
         """ set the page loading progress"""
         if self.progress_bar.isHidden():
@@ -179,6 +177,9 @@ class MainWin(qt.QMainWindow):
         thread = threading.Thread(target=run_server, args=(self.document,))
         thread.setDaemon(True)
         thread.start()
+
+    def slot_jump_browser(self):
+        webbrowser.open(self.add_new_edit.text())
 
     def showEvent(self, e):
         """ set the link editor focus """
