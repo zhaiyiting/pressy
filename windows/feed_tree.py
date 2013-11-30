@@ -71,11 +71,6 @@ class TreeModel(qt.QAbstractItemModel):
             parentItem = parent.internalPointer()
             return parentItem.childCount()
 
-    def flags(self, index):
-        if not index.isValid():
-            return qt.Qt.NoItemFlags
-        return qt.Qt.ItemIsEnabled | qt.Qt.ItemIsSelectable
-
     def data(self, index, role):
         if not index.isValid():
             return qt.QVariant()
@@ -230,5 +225,48 @@ class TreeModel(qt.QAbstractItemModel):
                 entrie.has_read = True
             index = item.index
             self.emit(qt.SIGNAL("dataChanged(QModelIndex, QModelIndex)"), index, index)
+
+
+    def supportedDropActions(self):
+        return qt.Qt.MoveAction
+
+    def flags(self, index):
+        if not index.isValid():
+            return qt.Qt.NoItemFlags
+        return qt.Qt.ItemIsEnabled | qt.Qt.ItemIsSelectable | \
+               qt.Qt.ItemIsDragEnabled | qt.Qt.ItemIsDropEnabled
+
+    def mimeTypes(self):
+        return ["application"]
+
+    def mimeData(self, indexes):
+        mimeData = qt.QMimeData()
+        fakeData = qt.QByteArray()
+        mimeData.setData("application", fakeData)
+
+        for index in indexes:
+            if not index.isValid():
+                continue
+            item = index.internalPointer()
+            feed = item.itemData
+            if isinstance(feed, unicode):
+                return
+            self.move_item = item
+            return mimeData
+
+    def dropMimeData(self, data, action, row, column, parent):
+        if not parent.isValid():
+            parent = self.index(row, column, qt.QModelIndex())
+            start = 0
+        else:
+            start = row
+            parent_item = parent.internalPointer()
+            print parent_item.itemData.title()
+            self.beginInsertRows(parent, start, start)
+            parent_item.childItems.insert(start, self.move_item)
+            self.move_item.parentItem.childItems.remove(self.move_item)
+            self.move_item.parentItem = parent_item
+            self.endInsertRows()
+        return True
 
 

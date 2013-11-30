@@ -52,6 +52,7 @@ class FeedTree(qt.QWidget):
         self.treeview = qt.QTreeView(self)
         self.treeview.setModel(self.treemodel)
         self.treeview.setHeaderHidden(True)
+        self.treeview.setDragDropMode(qt.QAbstractItemView.InternalMove)
         self.treemodel.add_feeds(self.document.feedlist, self.document.folder_list)
         self.treeview.expandAll()
 
