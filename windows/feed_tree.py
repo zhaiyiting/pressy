@@ -232,7 +232,7 @@ class TreeModel(qt.QAbstractItemModel):
 
     def flags(self, index):
         if not index.isValid():
-            return qt.Qt.NoItemFlags
+            return qt.Qt.ItemIsDropEnabled# | qt.Qt.ItemIsDragEnabled | qt.Qt.ItemIsSelectable | qt.Qt.ItemIsEnabled
         return qt.Qt.ItemIsEnabled | qt.Qt.ItemIsSelectable | \
                qt.Qt.ItemIsDragEnabled | qt.Qt.ItemIsDropEnabled
 
@@ -252,21 +252,63 @@ class TreeModel(qt.QAbstractItemModel):
             if isinstance(feed, unicode):
                 return
             self.move_item = item
+            self.move_parent = self.parent(index)
             return mimeData
 
     def dropMimeData(self, data, action, row, column, parent):
         if not parent.isValid():
-            parent = self.index(row, column, qt.QModelIndex())
-            start = 0
+            # row = 0 -> above the first folder -> ignore
+            if row == 0:
+                print row
+                return False
+            # row = -1 -> drop on empety space -> append to the last folder
+            if row == -1:
+                # find the last folder index
+                parent = self.index(len(self.folder_item)-1, 0, qt.QModelIndex())
+                parent_item = parent.internalPointer()
+                start = parent_item.childCount()
+                self.__drop(parent, start)
+            else:
+                # because we want to insert into the folder not insert as
+                # folder, so the row-1 is the folder's row
+                parent = self.index(row-1, column, qt.QModelIndex())
+                parent_item = parent.internalPointer()
+                if self.move_item.parentItem != parent_item:
+                    # if the drop item from another folder, append as the last one
+                    start = parent_item.childCount()
+                else:
+                    # if from the same folder, insert as first one
+                    start = 0
+                self.__drop(parent, start)
         else:
-            start = row
-            parent_item = parent.internalPointer()
-            print parent_item.itemData.title()
-            self.beginInsertRows(parent, start, start)
-            parent_item.childItems.insert(start, self.move_item)
-            self.move_item.parentItem.childItems.remove(self.move_item)
-            self.move_item.parentItem = parent_item
-            self.endInsertRows()
+            if row == -1:
+                # drop on folder or feed item
+                parent_item = parent.internalPointer()
+                child_count = parent_item.childCount()
+                if child_count != 0 or isinstance(parent_item.itemData,
+                        unicode):
+                    # on folder
+                    start = child_count
+                    self.__drop(parent, start)
+                else:
+                    # on feed item
+                    start = parent.row()
+                    parent = self.parent(parent)
+                    self.__drop(parent, start)
+            else:
+                start = row
+                self.__drop(parent, start)
         return True
+
+    def __drop(self, parent, start):
+        parent_item = parent.internalPointer()
+        self.beginRemoveRows(self.move_parent, self.move_item.row(),
+                self.move_item.row())
+        self.move_item.parentItem.childItems.remove(self.move_item)
+        self.endRemoveRows()
+        self.beginInsertRows(parent, start, start)
+        parent_item.childItems.insert(start, self.move_item)
+        self.move_item.parentItem = parent_item
+        self.endInsertRows()
 
 
