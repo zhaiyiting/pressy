@@ -1,10 +1,11 @@
-import feedparser as fp
+from lxml import etree
 import cPickle as pickle
 import urllib2
 import time
 import os.path as osp
 import threading
 import Queue
+import feedparser as fp
 import pressy.setting as st
 import pressy.utils as ut
 
@@ -50,23 +51,33 @@ class Document(object):
         self.update_feeds = 0
         self.update_items = 0
 
-    def add_feed(self, link):
+    def add_feed(self, link, html):
         """ add the new feed to feeds list"""
         feed = Feed(link)
         feed_link = feed.link.lower()
         if not feed_link.startswith("http"):
             feed_link = "http://" + feed.link
-        feed_link = feed_link.strip('/')
-        is_feed = False
-        key_list = ['', '/', '/atom', '/feed']
-        feed.ori_link = feed_link
-        for key in key_list:
-            feed.link = feed_link + key
-            if not self.__check_feed(feed):
-                is_feed = True
-                break
-            feed.link = feed.ori_link
-        if not is_feed:
+        success = False
+        if self.__check_feed(feed):
+            try:
+                href_feed = []
+                page = etree.HTML(html.lower())
+                links_node = page.xpath(u"//link[@type='application/rss+xml'][1]")
+                tmp = [href_feed.extend(link.xpath(u"attribute::href")) for link in links_node]
+                links_node = page.xpath(u"//link[@type='application/atom+xml'][1]")
+                tmp = [href_feed.extend(link.xpath(u"attribute::href")) for link in links_node]
+                for href in href_feed:
+                    if not href.startswith("http"):
+                        href = feed_link + href
+                    feed = Feed(href)
+                    if not self.__check_feed(feed):
+                        success = True
+                        break
+            except BaseException:
+                return 1
+        else:
+            success = True
+        if not success:
             return 1
         self.feedlist.append(feed)
 
@@ -135,7 +146,6 @@ class Document(object):
             if hasattr(f, "link"):
                 link = f.link
                 feed.href = link
-                print link
                 icon_link = "http://www.google.com/s2/favicons?domain=%s"%(link)
                 try:
                     icon = urllib2.urlopen(icon_link).read()

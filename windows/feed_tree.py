@@ -33,12 +33,6 @@ class TreeItem(object):
             return self.parentItem.childItems.index(self)
         return 0
 
-    #def hasChild(self, item):
-    #    if item in self.childItems:
-    #        return True
-    #    else:
-    #        return False
-
     def __eq__(self, other):
         other_item_data = other.itemData
         self_item_data = self.itemData
@@ -226,7 +220,6 @@ class TreeModel(qt.QAbstractItemModel):
             index = item.index
             self.emit(qt.SIGNAL("dataChanged(QModelIndex, QModelIndex)"), index, index)
 
-
     def supportedDropActions(self):
         return qt.Qt.MoveAction
 
@@ -259,7 +252,6 @@ class TreeModel(qt.QAbstractItemModel):
         if not parent.isValid():
             # row = 0 -> above the first folder -> ignore
             if row == 0:
-                print row
                 return False
             # row = -1 -> drop on empety space -> append to the last folder
             if row == -1:
@@ -309,6 +301,7 @@ class TreeModel(qt.QAbstractItemModel):
         self.beginInsertRows(parent, start, start)
         parent_item.childItems.insert(start, self.move_item)
         self.move_item.parentItem = parent_item
+        self.move_item.itemData.folder = parent_item.itemData
         self.endInsertRows()
 
 

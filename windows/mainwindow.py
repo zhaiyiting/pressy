@@ -147,7 +147,11 @@ class MainWin(qt.QMainWindow):
                     self, "Info - Pressy",
                     "Please put the feed link to left edit.")
             return 
-        if self.document.add_feed(feed_link):
+        # get the html
+        page = self.web_view.page()
+        frame = page.currentFrame()
+        html = frame.toHtml()
+        if self.document.add_feed(feed_link, html):
             qt.QMessageBox.warning(
                     self, "Error - Pressy",
                     "Can't parse this feed \n%s"%feed_link)
