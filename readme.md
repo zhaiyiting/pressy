@@ -1,5 +1,7 @@
 # Pressy 1.0
 
+[![Join the chat at https://gitter.im/luxiaolu/pressy](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/luxiaolu/pressy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ------
 Pressy is one local cross-platform RSS reader based on PyQt4.
 
